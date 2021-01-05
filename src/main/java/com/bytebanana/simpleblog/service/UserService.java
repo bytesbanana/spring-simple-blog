@@ -5,8 +5,8 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.bytebanana.simpleblog.entity.User;
-import com.bytebanana.simpleblog.repository.UserRepositry;
 import com.bytebanana.simpleblog.exception.UserNotFoundException;
+import com.bytebanana.simpleblog.repository.UserRepositry;
 
 import lombok.AllArgsConstructor;
 
@@ -16,12 +16,14 @@ public class UserService {
 
 	private final UserRepositry userRepositry;
 
-	public User findByEmail(String email) {
-		Optional<User> userOptional = userRepositry.findByEmail(email);
-		User user = userOptional.orElseThrow(() -> new UserNotFoundException(""));
+	public User findByUsername(String username) {
+		Optional<User> userOptional = userRepositry.findByUsername(username);
+		User user = userOptional.orElseThrow(() -> {
+			return new UserNotFoundException("User not found username : " + username);
+		});
 
 		return user;
+
 	}
-	
 
 }

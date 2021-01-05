@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.bytebanana.simpleblog.entity.User;
 
-public interface UserRepositry extends JpaRepository<User, Long>{
-	public Optional<User> findByEmail(String email);
+public interface UserRepositry extends JpaRepository<User, Long> {
+	public Optional<User> findByUsername(String username);
 }

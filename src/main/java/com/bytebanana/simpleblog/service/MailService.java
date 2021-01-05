@@ -25,7 +25,7 @@ public class MailService {
 
 		MimeMessagePreparator messagePreparator = mimeMessage -> {
 			MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage);
-			messageHelper.setFrom("springsimpleblog@localhost.com");
+			messageHelper.setFrom("springsimpleblog@localhost");
 			messageHelper.setTo(notificationEmail.getRecipient());
 			messageHelper.setSubject(notificationEmail.getSubject());
 			boolean isHtml = true;

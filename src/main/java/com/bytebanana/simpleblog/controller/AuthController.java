@@ -1,6 +1,8 @@
-package com.bytebanana.simpleblog;
+package com.bytebanana.simpleblog.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +31,12 @@ public class AuthController {
 	public ResponseEntity<Void> register(@RequestBody RegisterRequest registerRequest){
 		authService.register(registerRequest);
 		return ResponseEntity.ok().build();
+	}
+	
+	@GetMapping("/verifyAccount/{token}")
+	public ResponseEntity<String> verifyAccount(@PathVariable("token") String token){
+		authService.verifyAccount(token);
+		return ResponseEntity.ok("Account activated");
 	}
 	
 	

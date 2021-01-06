@@ -25,5 +25,15 @@ public class UserService {
 		return user;
 
 	}
+	
+	public User findById(Long userId) {
+		Optional<User> userOptional = userRepositry.findById(userId);
+		User user = userOptional.orElseThrow(() -> {
+			return new UserNotFoundException("User not found user id : " + userId);
+		});
+
+		return user;
+		
+	}
 
 }

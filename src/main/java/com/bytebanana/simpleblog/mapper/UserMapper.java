@@ -12,7 +12,7 @@ import com.bytebanana.simpleblog.service.UserService;
 public abstract class UserMapper {
 
 	@Autowired
-	protected UserService userService;
+	public UserService userService;
 
 //	@Mapping(target = "userId", expression = "java(userService.)")
 	public abstract User mapDtoToUser(RegisterRequest registerRequest);

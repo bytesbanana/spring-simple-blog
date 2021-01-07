@@ -1,20 +1,26 @@
 package com.bytebanana.simpleblog.mapper;
 
+import com.bytebanana.simpleblog.dto.PostRequest;
+import com.bytebanana.simpleblog.dto.PostResponse;
+import com.bytebanana.simpleblog.entity.Post;
+import com.bytebanana.simpleblog.service.UserService;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.bytebanana.simpleblog.dto.PostRequest;
-import com.bytebanana.simpleblog.entity.Post;
-import com.bytebanana.simpleblog.service.UserService;
-
 @Mapper(componentModel = "spring")
 public abstract class PostMapper {
 
-	@Autowired
-	public UserService userService;
+    @Mapping(target = "userId", expression = "java(post.getUser().getUserId())")
+    public abstract PostResponse mapToResponse(Post post);
 
-	@Mapping(target = "user", expression = "java(userService.findById(postRequest.getUserId()))")
-	public abstract Post mapToPost(PostRequest postRequest);
+
+    @Mapping(target = "user", ignore = true)
+    @Mapping(target = "postId", ignore = true)
+    @Mapping(target = "lastUpdateDate", ignore = true)
+    @Mapping(target = "createDate", ignore = true)
+    public abstract Post mapCreateDtoToPost(PostRequest postRequest);
+
+
 
 }

@@ -30,61 +30,69 @@ import lombok.AllArgsConstructor;
 @Transactional
 public class AuthService {
 
-	private final UserRepositry userRepositry;
-	private final VerificationTokenRepository verificationTokenRepository;
-	private final JwtProvider jwtService;
-	private final PasswordEncoder passwordEncoder;
-	private final MailService mailService;
-	private final AuthenticationManager authenticationManager;
+    private final UserService userService;
+    private final VerificationTokenRepository verificationTokenRepository;
+    private final JwtProvider jwtService;
+    private final PasswordEncoder passwordEncoder;
+    private final MailService mailService;
+    private final AuthenticationManager authenticationManager;
 
-	public LoginResponse login(LoginRequest loginRequest) {
+    public LoginResponse login(LoginRequest loginRequest) {
 
-		Authentication authentication = authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
-		SecurityContextHolder.getContext().setAuthentication(authentication);
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-		String token = jwtService.generateToken(authentication);
+        String token = jwtService.generateToken(authentication);
 
-		return LoginResponse.builder().token(token).username(loginRequest.getUsername()).build();
+        return LoginResponse.builder().token(token).username(loginRequest.getUsername()).build();
 
-	}
+    }
 
-	public void register(RegisterRequest registerRequest) {
-		User user = new User();
-		user.setEmail(registerRequest.getEmail());
-		user.setUsername(registerRequest.getUsername());
-		user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-		user.setFirstName(registerRequest.getFirstName());
-		user.setLastName(registerRequest.getLastName());
-		user.setEnable(false);
+    public void register(RegisterRequest registerRequest) {
+        User user = new User();
+        user.setEmail(registerRequest.getEmail());
+        user.setUsername(registerRequest.getUsername());
+        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        user.setFirstName(registerRequest.getFirstName());
+        user.setLastName(registerRequest.getLastName());
+        user.setEnable(false);
 
-		User savedUser = userRepositry.save(user);
-		String token = UUID.randomUUID().toString();
+        User savedUser = userService.save(user);
+        String token = UUID.randomUUID().toString();
 
-		VerificationToken verificationToken = new VerificationToken();
-		verificationToken.setToken(token);
-		verificationToken.setUser(savedUser);
-		verificationTokenRepository.save(verificationToken);
+        VerificationToken verificationToken = new VerificationToken();
+        verificationToken.setToken(token);
+        verificationToken.setUser(savedUser);
+        verificationTokenRepository.save(verificationToken);
 
-		NotificationEmail notificationEmail = new NotificationEmail();
-		notificationEmail.setSubject("Account Verification");
-		notificationEmail.setRecipient(user.getEmail());
-		notificationEmail
-				.setBody("<a href='http://localhost:8080/api/auth/verifyAccount/" + token + "'> Activation Link </a>");
+        NotificationEmail notificationEmail = new NotificationEmail();
+        notificationEmail.setSubject("Account Verification");
+        notificationEmail.setRecipient(user.getEmail());
+        notificationEmail
+                .setBody("<a href='http://localhost:8080/api/auth/verifyAccount/" + token + "'> Activation Link </a>");
 
-		mailService.sendMail(notificationEmail);
+        mailService.sendMail(notificationEmail);
 
-	}
+    }
 
-	public void verifyAccount(String token) {
-		Optional<VerificationToken> verificationTokenOptional = verificationTokenRepository.findByToken(token);
-		VerificationToken verificationToken = verificationTokenOptional.orElseThrow(() -> {
-			return new SpringSimpleBlogException("Cannot verify account");
-		});
+    public void verifyAccount(String token) {
+        Optional<VerificationToken> verificationTokenOptional = verificationTokenRepository.findByToken(token);
+        VerificationToken verificationToken = verificationTokenOptional.orElseThrow(() -> {
+            return new SpringSimpleBlogException("Cannot verify account");
+        });
 
-		User user = verificationToken.getUser();
-		user.setEnable(true);
+        User user = verificationToken.getUser();
+        user.setEnable(true);
 
-		userRepositry.save(user);
-	}
+        userService.save(user);
+    }
+
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        org.springframework.security.core.userdetails.User secUser = (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
+        String username = secUser.getUsername();
+        User user = userService.findByUsername(username);
+        return user;
+    }
 }

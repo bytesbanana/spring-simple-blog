@@ -23,7 +23,6 @@ public class UserService {
 		});
 
 		return user;
-
 	}
 	
 	public User findById(Long userId) {
@@ -33,7 +32,10 @@ public class UserService {
 		});
 
 		return user;
-		
+	}
+
+	public User save(User user){
+		return userRepositry.save(user);
 	}
 
 }

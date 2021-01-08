@@ -13,6 +13,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
+
 @Entity
 @Data
 @AllArgsConstructor
@@ -34,4 +36,7 @@ public class Comment {
 	@JoinColumn(name = "userId", referencedColumnName = "userId")
 	private User user;
 
+	private Instant createDate;
+
+	private Instant lastUpdateDate;
 }

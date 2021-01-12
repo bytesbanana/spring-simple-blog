@@ -14,6 +14,9 @@ import java.util.Date;
 
 import javax.annotation.PostConstruct;
 
+import com.bytebanana.simpleblog.entity.RefreshToken;
+import com.bytebanana.simpleblog.exception.SpringSimpleBlogException;
+import com.bytebanana.simpleblog.repository.RefreshTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -35,76 +38,93 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JwtProvider {
 
-	private static final String SECRET_KEY = "spring-simple-blog";
-	private KeyStore keyStore;
-	@Value("${jwt.exp.milli}")
-	private Long expirationInMilli;
+    private static final String SECRET_KEY = "spring-simple-blog";
+    private KeyStore keyStore;
+    @Value("${jwt.exp.milli}")
+    private Long expirationInMilli;
 
-	@Autowired
-	private UserService userService;
+    @Autowired
+    private UserService userService;
 
-	@PostConstruct
-	public void init() {
-		try {
-			keyStore = KeyStore.getInstance("JKS");
-			InputStream inputStream = getClass().getClassLoader().getResourceAsStream("spring-simple-blog.jks");
-			keyStore.load(inputStream, SECRET_KEY.toCharArray());
-		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
-			e.printStackTrace();
-		}
-	}
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
 
-	public PrivateKey getPrivateKey() {
-		PrivateKey privateKey = null;
-		try {
-			privateKey = (PrivateKey) keyStore.getKey("spring-simple-blog", SECRET_KEY.toCharArray());
-		} catch (UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
-		return privateKey;
-	}
+    @PostConstruct
+    public void init() {
+        try {
+            keyStore = KeyStore.getInstance("JKS");
+            InputStream inputStream = getClass().getClassLoader().getResourceAsStream("spring-simple-blog.jks");
+            keyStore.load(inputStream, SECRET_KEY.toCharArray());
+        } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-	public PublicKey getPublicKey() {
-		PublicKey publicKey = null;
-		try {
-			publicKey = keyStore.getCertificate("spring-simple-blog").getPublicKey();
-		} catch (KeyStoreException e) {
-			e.printStackTrace();
-		}
-		return publicKey;
-	}
+    public PrivateKey getPrivateKey() {
+        PrivateKey privateKey = null;
+        try {
+            privateKey = (PrivateKey) keyStore.getKey("spring-simple-blog", SECRET_KEY.toCharArray());
+        } catch (UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return privateKey;
+    }
 
-	public String generateToken(Authentication authentication) {
-		User principal = (User) authentication.getPrincipal();
+    public PublicKey getPublicKey() {
+        PublicKey publicKey = null;
+        try {
+            publicKey = keyStore.getCertificate("spring-simple-blog").getPublicKey();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        }
+        return publicKey;
+    }
 
-		String token = Jwts.builder().setSubject(principal.getUsername()).setIssuedAt(Date.from(Instant.now()))
-				.setExpiration(Date.from(Instant.now().plusMillis(expirationInMilli))).signWith(getPrivateKey())
-				.compact();
+    public String generateToken(Authentication authentication) {
+        User principal = (User) authentication.getPrincipal();
 
-		return token;
-	}
+        String token = Jwts.builder().setSubject(principal.getUsername()).setIssuedAt(Date.from(Instant.now()))
+                .setExpiration(Date.from(Instant.now().plusMillis(expirationInMilli))).signWith(getPrivateKey())
+                .compact();
 
-	public boolean validateToken(String jwt) {
-		try {
-			JwtParser jwtParser = buildJwsParse();
-			jwtParser.parseClaimsJws(jwt);
-			return true;
-		} catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException | SignatureException
-				| IllegalArgumentException e) {
-			log.error(e.getMessage());
-			return false;
-		}
-	}
+        return token;
+    }
 
-	private JwtParser buildJwsParse() {
-		JwtParser jwtParser = Jwts.parserBuilder().setSigningKey(getPublicKey()).build();
-		return jwtParser;
-	}
+    public String generateTokenByUsername(String username) {
+        String token = Jwts.builder().setSubject(username).setIssuedAt(Date.from(Instant.now()))
+                .setExpiration(Date.from(Instant.now().plusMillis(expirationInMilli))).signWith(getPrivateKey())
+                .compact();
 
-	public String getUsernameFromJwt(String jwt) {
-		JwtParser jwtParser = buildJwsParse();
-		Claims claims = jwtParser.parseClaimsJws(jwt).getBody();
-		return claims.getSubject();
-	}
+        return token;
+    }
+
+    public boolean validateToken(String jwt) {
+        try {
+            JwtParser jwtParser = buildJwsParse();
+            jwtParser.parseClaimsJws(jwt);
+            return true;
+        } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException | SignatureException
+                | IllegalArgumentException e) {
+            log.error(e.getMessage());
+            return false;
+        }
+    }
+
+    private JwtParser buildJwsParse() {
+        JwtParser jwtParser = Jwts.parserBuilder().setSigningKey(getPublicKey()).build();
+        return jwtParser;
+    }
+
+    public String getUsernameFromJwt(String jwt) {
+        JwtParser jwtParser = buildJwsParse();
+        Claims claims = jwtParser.parseClaimsJws(jwt).getBody();
+        return claims.getSubject();
+    }
+
+    public Date getExpiryFromJwt(String jwt) {
+        JwtParser jwtParser = buildJwsParse();
+        Claims claims = jwtParser.parseClaimsJws(jwt).getBody();
+        return claims.getExpiration();
+    }
 
 }

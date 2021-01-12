@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.bytebanana.simpleblog.dto.PostRequest;
+import com.bytebanana.simpleblog.dto.PostResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -17,9 +18,11 @@ import com.bytebanana.simpleblog.mapper.PostMapper;
 import com.bytebanana.simpleblog.repository.PostRepository;
 
 import lombok.AllArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
+@Transactional
 public class PostService {
 
     private final PostRepository postRepository;
@@ -31,27 +34,33 @@ public class PostService {
         return posts;
     }
 
-    public Post findPostById(Long postId) {
+    public PostResponse findPostById(Long postId) {
         Optional<Post> postOp = postRepository.findById(postId);
         Post post = postOp.orElseThrow(() -> new PostNotFoundException("Post not found id :" + postId));
-
-        return post;
+        PostResponse postResponse = postMapper.mapToResponse(post);
+        return postResponse;
     }
 
-    public void createNewPost(PostRequest postRequest) {
-        Post post = postMapper.mapCreateDtoToPost(postRequest);
-        post.setPostId(0L);
-        post.setCreateDate(Instant.now());
+    public PostResponse createNewPost(PostRequest postRequest) {
+        Post mappedPost = postMapper.mapCreateDtoToPost(postRequest);
+        mappedPost.setPostId(0L);
+        mappedPost.setCreateDate(Instant.now());
         User user = getCurrentUser();
-        post.setUser(user);
-        postRepository.save(post);
+        mappedPost.setUser(user);
+        Post post = postRepository.save(mappedPost);
+
+        PostResponse postResp = postMapper.mapToResponse(post);
+
+        return postResp;
     }
 
     public void updatePost(Long postId, PostRequest updatePostRequest) {
         Post post = postMapper.mapCreateDtoToPost(updatePostRequest);
         post.setPostId(postId);
         post.setLastUpdateDate(Instant.now());
-        Post existingPost = findPostById(post.getPostId());
+        Optional<Post> postOp = postRepository.findById(post.getPostId());
+        Post existingPost = postOp.orElseThrow(() -> new PostNotFoundException("Post not found id :" + postId));
+
         if (userIsPostOwner(existingPost)) {
             throw new SpringSimpleBlogException("Cannot update post id" + post.getPostId());
         }
@@ -71,7 +80,8 @@ public class PostService {
     public void delete(Long postId) {
 
         User user = getCurrentUser();
-        Post post = findPostById(postId);
+        Optional<Post> postOp = postRepository.findById(postId);
+        Post post = postOp.orElseThrow(() -> new PostNotFoundException("Post not found id :" + postId));
 
         if (post.getUser() != user) {
             throw new SpringSimpleBlogException("Cannot delete post id:" + postId);

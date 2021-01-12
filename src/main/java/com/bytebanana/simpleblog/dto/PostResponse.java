@@ -15,5 +15,5 @@ public class PostResponse {
     private String content;
     private Instant createDate;
     private Instant lastUpdateDate;
-    private Long userId;
+    private String username;
 }

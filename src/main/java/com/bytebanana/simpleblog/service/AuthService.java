@@ -1,10 +1,13 @@
 package com.bytebanana.simpleblog.service;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
-import javax.transaction.Transactional;
-
+import com.bytebanana.simpleblog.dto.RefreshTokenRequest;
+import com.bytebanana.simpleblog.entity.RefreshToken;
+import com.bytebanana.simpleblog.exception.UserNotFoundException;
+import com.bytebanana.simpleblog.repository.UserRepositry;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -12,41 +15,48 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.bytebanana.simpleblog.dto.LoginRequest;
-import com.bytebanana.simpleblog.dto.LoginResponse;
+import com.bytebanana.simpleblog.dto.AuthenticationRequest;
+import com.bytebanana.simpleblog.dto.AuthenticationResponse;
 import com.bytebanana.simpleblog.dto.RegisterRequest;
 import com.bytebanana.simpleblog.entity.User;
 import com.bytebanana.simpleblog.entity.VerificationToken;
 import com.bytebanana.simpleblog.exception.SpringSimpleBlogException;
 import com.bytebanana.simpleblog.model.NotificationEmail;
-import com.bytebanana.simpleblog.repository.UserRepositry;
 import com.bytebanana.simpleblog.repository.VerificationTokenRepository;
 import com.bytebanana.simpleblog.security.JwtProvider;
 
 import lombok.AllArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
 @Transactional
 public class AuthService {
 
-    private final UserService userService;
+    private final UserRepositry userRepositry;
     private final VerificationTokenRepository verificationTokenRepository;
-    private final JwtProvider jwtService;
+    private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
     private final AuthenticationManager authenticationManager;
+    private final RefreshTokenService  refreshTokenService;
 
-    public LoginResponse login(LoginRequest loginRequest) {
+    public AuthenticationResponse login(AuthenticationRequest authenticationRequest) {
 
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+                new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String token = jwtService.generateToken(authentication);
+        String token = jwtProvider.generateToken(authentication);
+        Instant expiry = jwtProvider.getExpiryFromJwt(token).toInstant();
 
-        return LoginResponse.builder().token(token).username(loginRequest.getUsername()).build();
-
+        RefreshToken refreshToken = refreshTokenService.generateRefreshToken();
+        return AuthenticationResponse.builder()
+                .token(token)
+                .username(authenticationRequest.getUsername())
+                .refreshToken(refreshToken.getToken())
+                .expiry(expiry)
+                .build();
     }
 
     public void register(RegisterRequest registerRequest) {
@@ -58,7 +68,7 @@ public class AuthService {
         user.setLastName(registerRequest.getLastName());
         user.setEnable(false);
 
-        User savedUser = userService.save(user);
+        User savedUser = userRepositry.save(user);
         String token = UUID.randomUUID().toString();
 
         VerificationToken verificationToken = new VerificationToken();
@@ -85,14 +95,29 @@ public class AuthService {
         User user = verificationToken.getUser();
         user.setEnable(true);
 
-        userService.save(user);
+        userRepositry.save(user);
     }
 
     public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         org.springframework.security.core.userdetails.User secUser = (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
         String username = secUser.getUsername();
-        User user = userService.findByUsername(username);
+        Optional<User> userOp = userRepositry.findByUsername(username);
+        User user = userOp.orElseThrow(() -> new UserNotFoundException("User not found username:" + username));
         return user;
+    }
+
+    public AuthenticationResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
+        refreshTokenService.validateRefreshToken(refreshTokenRequest.getRefreshToken());
+
+        String token = jwtProvider.generateTokenByUsername(refreshTokenRequest.getUsername());
+        Instant expiry = jwtProvider.getExpiryFromJwt(token).toInstant();
+
+        return AuthenticationResponse.builder()
+                .refreshToken(refreshTokenRequest.getRefreshToken())
+                .token(token)
+                .username(refreshTokenRequest.getUsername())
+                .expiry(expiry)
+                .build();
     }
 }

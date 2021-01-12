@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Mapper(componentModel = "spring")
 public abstract class PostMapper {
 
-    @Mapping(target = "userId", expression = "java(post.getUser().getUserId())")
+    @Mapping(target = "username", expression = "java(post.getUser().getUsername())")
     public abstract PostResponse mapToResponse(Post post);
 
 

@@ -8,6 +8,7 @@ import com.bytebanana.simpleblog.mapper.CommentMapper;
 import com.bytebanana.simpleblog.repository.CommentRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Transactional
 public class CommentService {
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;

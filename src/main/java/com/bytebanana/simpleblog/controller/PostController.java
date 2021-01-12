@@ -35,20 +35,19 @@ public class PostController {
     }
 
     @GetMapping("/{postId}")
-    public ResponseEntity<Post> getPostById(@PathVariable("postId") Long postId) {
-        Post post = postService.findPostById(postId);
-        return ResponseEntity.ok(post);
+    public ResponseEntity<PostResponse> getPostById(@PathVariable("postId") Long postId) {
+        PostResponse postResponse = postService.findPostById(postId);
+        return ResponseEntity.ok(postResponse);
     }
 
     @PostMapping
-    public ResponseEntity<Void> createPost(@RequestBody PostRequest postRequest) {
-        postService.createNewPost(postRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<PostResponse> createPost(@RequestBody PostRequest postRequest) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(postService.createNewPost(postRequest));
     }
 
     @PutMapping("/{postId}")
-    public ResponseEntity<Void> updatePost(@PathVariable("postId") Long postId ,@RequestBody PostRequest postRequest) {
-        postService.updatePost(postId,postRequest);
+    public ResponseEntity<Void> updatePost(@PathVariable("postId") Long postId, @RequestBody PostRequest postRequest) {
+        postService.updatePost(postId, postRequest);
         return ResponseEntity.noContent().build();
     }
 
@@ -59,7 +58,7 @@ public class PostController {
     }
 
     @GetMapping("/{postId}/comments")
-    public ResponseEntity<List<CommentResponse>> findAllCommentOfPost(@PathVariable("postId") Long postId){
+    public ResponseEntity<List<CommentResponse>> findAllCommentOfPost(@PathVariable("postId") Long postId) {
         List<CommentResponse> commentResponses = commentService.findAllByPostId(postId);
         return ResponseEntity.ok(commentResponses);
     }

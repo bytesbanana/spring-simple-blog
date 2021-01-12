@@ -2,6 +2,7 @@ package com.bytebanana.simpleblog.mapper;
 
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.bytebanana.simpleblog.dto.RegisterRequest;
@@ -14,7 +15,7 @@ public abstract class UserMapper {
 	@Autowired
 	public UserService userService;
 
-//	@Mapping(target = "userId", expression = "java(userService.)")
-	public abstract User mapDtoToUser(RegisterRequest registerRequest);
+//	@Mapping(target = "userId", expression = "java(userService.findById())")
+//	public abstract User mapDtoToUser(RegisterRequest registerRequest);
 
 }

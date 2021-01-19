@@ -19,7 +19,7 @@ public abstract class PostMapper {
     @Mapping(target = "postId", ignore = true)
     @Mapping(target = "lastUpdateDate", ignore = true)
     @Mapping(target = "createDate", ignore = true)
-    public abstract Post mapCreateDtoToPost(PostRequest postRequest);
+    public abstract Post mapDtoToPost(PostRequest postRequest);
 
 
 

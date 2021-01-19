@@ -3,6 +3,7 @@ package com.bytebanana.simpleblog.service;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.bytebanana.simpleblog.dto.PostRequest;
 import com.bytebanana.simpleblog.dto.PostResponse;
@@ -30,7 +31,7 @@ public class PostService {
     private final UserService userService;
 
     public List<Post> findAllPost() {
-        List<Post> posts = postRepository.findAll();
+        List<Post> posts = postRepository.findAllByOrderByCreateDateDesc();
         return posts;
     }
 
@@ -42,9 +43,10 @@ public class PostService {
     }
 
     public PostResponse createNewPost(PostRequest postRequest) {
-        Post mappedPost = postMapper.mapCreateDtoToPost(postRequest);
+        Post mappedPost = postMapper.mapDtoToPost(postRequest);
         mappedPost.setPostId(0L);
         mappedPost.setCreateDate(Instant.now());
+        mappedPost.setPublished(postRequest.getPublished());
         User user = getCurrentUser();
         mappedPost.setUser(user);
         Post post = postRepository.save(mappedPost);
@@ -54,18 +56,21 @@ public class PostService {
         return postResp;
     }
 
-    public void updatePost(Long postId, PostRequest updatePostRequest) {
-        Post post = postMapper.mapCreateDtoToPost(updatePostRequest);
+    public Post updatePost(Long postId, PostRequest updatePostRequest) {
+        Post post = postMapper.mapDtoToPost(updatePostRequest);
+        Optional<Post> postOp = postRepository.findById(postId);
+        Post existingPost = postOp.orElseThrow(() -> new PostNotFoundException("Post not found id :" + postId));
+
         post.setPostId(postId);
         post.setLastUpdateDate(Instant.now());
-        Optional<Post> postOp = postRepository.findById(post.getPostId());
-        Post existingPost = postOp.orElseThrow(() -> new PostNotFoundException("Post not found id :" + postId));
+        post.setUser(getCurrentUser());
+        post.setCreateDate(existingPost.getCreateDate());;
 
         if (userIsPostOwner(existingPost)) {
             throw new SpringSimpleBlogException("Cannot update post id" + post.getPostId());
         }
 
-        postRepository.save(post);
+        return postRepository.save(post);
     }
 
     private boolean userIsPostOwner(Post existingPost) {
@@ -95,6 +100,25 @@ public class PostService {
         org.springframework.security.core.userdetails.User currentUser = (org.springframework.security.core.userdetails.User) auth.getPrincipal();
         User user = userService.findByUsername(currentUser.getUsername());
         return user;
+    }
+
+    public List<PostResponse> findMyDraftPost() {
+        List<PostResponse> postResponses = findMyPostByPublished(false);
+        return postResponses;
+    }
+
+    public List<PostResponse> findMyPublishedPost() {
+        List<PostResponse> postResponses = findMyPostByPublished(true);
+        return postResponses;
+    }
+
+    private List<PostResponse> findMyPostByPublished(boolean isPublished) {
+        User currentUser = getCurrentUser();
+        List<Post> posts = postRepository.findAllByPublishedAndUserOrderByCreateDateDesc(isPublished, currentUser);
+        List<PostResponse> postResponses = posts.stream().map(
+                (post) -> postMapper.mapToResponse(post)
+        ).collect(Collectors.toList());
+        return postResponses;
     }
 
 }

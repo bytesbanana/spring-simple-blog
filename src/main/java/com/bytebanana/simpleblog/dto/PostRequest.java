@@ -11,5 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PostRequest {
 	private String title;
+	private String subTitle;
 	private String content;
+	private Boolean published;
 }

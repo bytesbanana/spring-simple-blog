@@ -127,4 +127,8 @@ public class JwtProvider {
         return claims.getExpiration();
     }
 
+    public Long getExpirationInMilli(){
+        return this.expirationInMilli;
+    }
+
 }

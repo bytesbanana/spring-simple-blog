@@ -8,10 +8,12 @@ import com.bytebanana.simpleblog.mapper.PostMapper;
 import com.bytebanana.simpleblog.service.CommentService;
 import com.bytebanana.simpleblog.service.PostService;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,9 +30,10 @@ public class PostController {
     @GetMapping
     public ResponseEntity<List<PostResponse>> getAllPost() {
         List<Post> postList = postService.findAllPost();
-        List<PostResponse> postResponseList = postList.stream()
-                .map(post -> postMapper.mapToResponse(post))
-                .collect(Collectors.toList());
+        List<PostResponse> postResponseList =
+                postList.stream()
+                        .map(postMapper::mapToResponse)
+                        .collect(Collectors.toList());
         return ResponseEntity.ok(postResponseList);
     }
 
@@ -42,13 +45,15 @@ public class PostController {
 
     @PostMapping
     public ResponseEntity<PostResponse> createPost(@RequestBody PostRequest postRequest) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(postService.createNewPost(postRequest));
+        return ResponseEntity.ok(postService.createNewPost(postRequest));
     }
 
     @PutMapping("/{postId}")
-    public ResponseEntity<Void> updatePost(@PathVariable("postId") Long postId, @RequestBody PostRequest postRequest) {
-        postService.updatePost(postId, postRequest);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<PostResponse> updatePost(@PathVariable("postId") Long postId, @RequestBody PostRequest postRequest) {
+        System.out.println(postRequest);
+        Post post = postService.updatePost(postId, postRequest);
+        PostResponse postResponse = postMapper.mapToResponse(post);
+        return ResponseEntity.ok(postResponse);
     }
 
     @DeleteMapping("/{postId}")

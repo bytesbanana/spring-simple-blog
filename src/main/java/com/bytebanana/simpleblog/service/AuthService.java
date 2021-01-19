@@ -8,6 +8,7 @@ import com.bytebanana.simpleblog.dto.RefreshTokenRequest;
 import com.bytebanana.simpleblog.entity.RefreshToken;
 import com.bytebanana.simpleblog.exception.UserNotFoundException;
 import com.bytebanana.simpleblog.repository.UserRepositry;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;

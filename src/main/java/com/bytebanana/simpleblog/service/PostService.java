@@ -64,7 +64,8 @@ public class PostService {
         post.setPostId(postId);
         post.setLastUpdateDate(Instant.now());
         post.setUser(getCurrentUser());
-        post.setCreateDate(existingPost.getCreateDate());;
+        post.setCreateDate(existingPost.getCreateDate());
+        ;
 
         if (userIsPostOwner(existingPost)) {
             throw new SpringSimpleBlogException("Cannot update post id" + post.getPostId());
@@ -121,4 +122,14 @@ public class PostService {
         return postResponses;
     }
 
+    public void isUserOwnedPost(Long postId) {
+        Post postForCheck = postRepository.findById(postId).orElseThrow(
+                () -> new PostNotFoundException("Post not found id: " + postId)
+        );
+
+        User currentUser = getCurrentUser();
+        if (!currentUser.equals(postForCheck.getUser())) {
+            throw new SpringSimpleBlogException("User have no permisson");
+        }
+    }
 }

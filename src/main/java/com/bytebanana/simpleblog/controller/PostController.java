@@ -67,4 +67,10 @@ public class PostController {
         List<CommentResponse> commentResponses = commentService.findAllByPostId(postId);
         return ResponseEntity.ok(commentResponses);
     }
+
+    @PostMapping("/{postId}/checkpermission")
+    public ResponseEntity<Void> checkUserPermission(@PathVariable("postId") Long postId){
+        postService.isUserOwnedPost(postId);
+        return ResponseEntity.ok().build();
+    }
 }

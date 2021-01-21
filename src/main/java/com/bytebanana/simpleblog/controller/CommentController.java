@@ -14,20 +14,20 @@ public class CommentController {
     private final CommentService commentService;
 
     @GetMapping("/{commentId}")
-    public ResponseEntity<CommentResponse> findByCommentId(@PathVariable("commentId") Long commentId, @RequestBody CommentRequest commentRequest) {
+    public ResponseEntity<CommentResponse> findById(@PathVariable("commentId") Long commentId){
+        return ResponseEntity.ok(commentService.findById(commentId));
+    }
+
+    @PutMapping("/{commentId}")
+    public ResponseEntity<Void> updateComment(@PathVariable("commentId") Long commentId,@RequestBody CommentRequest commentRequest)  {
         commentService.updateComment(commentId, commentRequest);
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/{commentId}")
-    public ResponseEntity<Void> updateComment(@PathVariable("commentId") Long commentId) {
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping("/commentId")
-    public ResponseEntity<Void> deleteComment() {
-
-        return ResponseEntity.noContent().build();
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<Void> deleteComment(@PathVariable("commentId") Long commentId) {
+        commentService.deleteComment(commentId);
+        return ResponseEntity.ok().build();
     }
 
 }

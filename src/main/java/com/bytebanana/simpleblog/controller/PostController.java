@@ -1,5 +1,6 @@
 package com.bytebanana.simpleblog.controller;
 
+import com.bytebanana.simpleblog.dto.CommentRequest;
 import com.bytebanana.simpleblog.dto.CommentResponse;
 import com.bytebanana.simpleblog.dto.PostRequest;
 import com.bytebanana.simpleblog.dto.PostResponse;
@@ -8,12 +9,10 @@ import com.bytebanana.simpleblog.mapper.PostMapper;
 import com.bytebanana.simpleblog.service.CommentService;
 import com.bytebanana.simpleblog.service.PostService;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -64,12 +63,18 @@ public class PostController {
 
     @GetMapping("/{postId}/comments")
     public ResponseEntity<List<CommentResponse>> findAllCommentOfPost(@PathVariable("postId") Long postId) {
-        List<CommentResponse> commentResponses = commentService.findAllByPostId(postId);
+        List<CommentResponse> commentResponses = commentService.findAllCommentByPostId(postId);
         return ResponseEntity.ok(commentResponses);
     }
 
+    @PostMapping("/{postId}/comments")
+    public ResponseEntity<Void> addCommentToPost(@PathVariable("postId") Long postId, @RequestBody  CommentRequest request) {
+        commentService.addComment(postId, request);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/{postId}/checkpermission")
-    public ResponseEntity<Void> checkUserPermission(@PathVariable("postId") Long postId){
+    public ResponseEntity<Void> checkUserPermission(@PathVariable("postId") Long postId) {
         postService.isUserOwnedPost(postId);
         return ResponseEntity.ok().build();
     }

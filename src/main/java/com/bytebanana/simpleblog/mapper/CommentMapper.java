@@ -28,23 +28,18 @@ public abstract class CommentMapper {
     @Autowired
     protected AuthService authService;
 
-    @Mapping(target = "user", expression = "java(getRequestUser())")
-    @Mapping(target = "post", expression = "java(findById(commentRequest.getPostId()))")
+    @Mapping(target = "post", expression = "java(findPostById(commentRequest.getPostId()))")
+    @Mapping(target = "user", expression = "java(authService.getCurrentUser())")
     public abstract Comment mapRequestToComment(CommentRequest commentRequest);
 
+    @Mapping(target = "username", expression = "java(comment.getUser().getUsername())")
+    @Mapping(target = "postId" ,source = "post.postId")
     public abstract CommentResponse mapToRespone(Comment comment);
 
-    protected Post findById(Long postId) {
+    protected Post findPostById(Long postId) {
         Optional<Post> postOp = postRepository.findById(postId);
-        Post post = postOp.orElseThrow(() -> {
-            return new PostNotFoundException("Post not found id :" + postId);
-        });
+        Post post = postOp.orElseThrow(() -> new PostNotFoundException("Post not found id :" + postId));
 
         return post;
-    }
-
-    protected User getRequestUser() {
-        User user = authService.getCurrentUser();
-        return user;
     }
 }

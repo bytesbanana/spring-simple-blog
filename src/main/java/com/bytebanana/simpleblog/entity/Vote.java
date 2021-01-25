@@ -23,7 +23,7 @@ public class Vote {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long voteId;
 	
-	private Boolean isLike;
+	private Boolean vote;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "postId",referencedColumnName = "postId")

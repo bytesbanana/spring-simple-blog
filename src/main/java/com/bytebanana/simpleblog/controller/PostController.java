@@ -1,9 +1,6 @@
 package com.bytebanana.simpleblog.controller;
 
-import com.bytebanana.simpleblog.dto.CommentRequest;
-import com.bytebanana.simpleblog.dto.CommentResponse;
-import com.bytebanana.simpleblog.dto.PostRequest;
-import com.bytebanana.simpleblog.dto.PostResponse;
+import com.bytebanana.simpleblog.dto.*;
 import com.bytebanana.simpleblog.entity.Post;
 import com.bytebanana.simpleblog.mapper.PostMapper;
 import com.bytebanana.simpleblog.service.CommentService;
@@ -25,7 +22,6 @@ public class PostController {
     private final CommentService commentService;
     private final PostMapper postMapper;
 
-
     @GetMapping
     public ResponseEntity<List<PostResponse>> getAllPost() {
         List<Post> postList = postService.findAllPost();
@@ -40,6 +36,12 @@ public class PostController {
     public ResponseEntity<PostResponse> getPostById(@PathVariable("postId") Long postId) {
         PostResponse postResponse = postService.findPostById(postId);
         return ResponseEntity.ok(postResponse);
+    }
+
+    @PostMapping("/search")
+    public ResponseEntity<List<PostResponse>> searchPost(@RequestParam("keyword") String keyword){
+
+        return ResponseEntity.ok(postService.searchPost(keyword));
     }
 
     @PostMapping
@@ -78,4 +80,19 @@ public class PostController {
         postService.isUserOwnedPost(postId);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/{postId}/vote")
+    public ResponseEntity<Void> votePost(@PathVariable("postId") Long postId,@RequestParam("like") Boolean isLike){
+        postService.votePost(postId,isLike);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{postId}/voteCount")
+    public ResponseEntity<VoteResponse> getCountVote(@PathVariable("postId") Long postId){
+
+        return ResponseEntity.ok(postService.findCountVote(postId));
+    }
+
+
+
 }

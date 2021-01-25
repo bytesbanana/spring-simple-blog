@@ -1,12 +1,16 @@
 package com.bytebanana.simpleblog.service;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.bytebanana.simpleblog.dto.PostRequest;
 import com.bytebanana.simpleblog.dto.PostResponse;
+import com.bytebanana.simpleblog.dto.VoteResponse;
+import com.bytebanana.simpleblog.entity.Vote;
+import com.bytebanana.simpleblog.repository.VoteRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -29,6 +33,8 @@ public class PostService {
     private final PostRepository postRepository;
     private final PostMapper postMapper;
     private final UserService userService;
+    private final AuthService authService;
+    private final VoteRepository voteRepository;
 
     public List<Post> findAllPost() {
         List<Post> posts = postRepository.findAllByOrderByCreateDateDesc();
@@ -131,5 +137,64 @@ public class PostService {
         if (!currentUser.equals(postForCheck.getUser())) {
             throw new SpringSimpleBlogException("User have no permisson");
         }
+    }
+
+    public List<PostResponse> searchPost(String keyword) {
+        List<Post> allFoundPost = new ArrayList<>();
+        boolean isPublished = true;
+        keyword = "%" + keyword + "%";
+        allFoundPost.addAll(postRepository.searchPostByKeyword(keyword, isPublished));
+
+        List<PostResponse> searchResult = allFoundPost.stream()
+                .map(postMapper::mapToResponse)
+                .collect(Collectors.toList());
+
+        return searchResult;
+    }
+
+    public void votePost(Long postId, Boolean isLike) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostNotFoundException("Post not found id:" + postId));
+        User user = authService.getCurrentUser();
+
+        Vote vote = voteRepository.findByPostAndUser(post, user).orElseGet(() -> null);
+
+        if (vote == null) {
+            vote = new Vote();
+            vote.setVoteId(0L);
+            vote.setVote(isLike);
+            vote.setPost(post);
+            vote.setUser(user);
+        }
+        vote.setVote(isLike);
+
+        voteRepository.save(vote);
+
+    }
+
+    public VoteResponse findCountVote(Long postId) {
+        long voteCount = 0;
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostNotFoundException("Post not found id:" + postId));
+        User user = authService.getCurrentUser();
+
+        List<Vote> voteList = voteRepository.findByPostAndVote(post, true);
+        voteCount = voteList.size();
+        Vote vote = voteRepository.findByPostAndUser(post, user).orElseGet(()->null);
+
+        Boolean currentUserVoted = true;
+
+        if (vote == null ) {
+            currentUserVoted = false;
+        }else{
+            if(!vote.getVote()){
+                currentUserVoted = false;
+            }
+        }
+
+        return VoteResponse.builder()
+                .currentUserVoted(currentUserVoted)
+                .voteCount(voteCount)
+                .build();
     }
 }

@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
 
+import com.bytebanana.simpleblog.exception.SpringSimpleBlogException;
+import com.bytebanana.simpleblog.exception.UserNotEnableException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,10 +28,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		Optional<User> userOptional = userRepositry.findByUsername(username);
-		
-		User user = userOptional.orElseThrow(() -> {
-			return new UserNotFoundException("User not found username:" + username);
-		});
+
+		User user = userOptional.orElseThrow(() -> new UserNotFoundException("User not found username:" + username));
+
+		if(!user.getEnable()){
+			throw new UserNotEnableException("User is not enable yet");
+		}
 
 		return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(),
 				getAuthorities("USER"));

@@ -34,13 +34,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class AuthService {
 
+    @Value("${server.port}")
+    private int serverPort;
     private final UserRepositry userRepositry;
     private final VerificationTokenRepository verificationTokenRepository;
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
     private final AuthenticationManager authenticationManager;
-    private final RefreshTokenService  refreshTokenService;
+    private final RefreshTokenService refreshTokenService;
 
     public AuthenticationResponse login(AuthenticationRequest authenticationRequest) {
 
@@ -81,7 +83,7 @@ public class AuthService {
         notificationEmail.setSubject("Account Verification");
         notificationEmail.setRecipient(user.getEmail());
         notificationEmail
-                .setBody("<a href='http://localhost:8080/api/auth/verifyAccount/" + token + "'> Activation Link </a>");
+                .setBody("<a href='http://localhost:" + serverPort + "/api/auth/verifyAccount/" + token + "'> Activation Link </a>");
 
         mailService.sendMail(notificationEmail);
 
@@ -89,9 +91,7 @@ public class AuthService {
 
     public void verifyAccount(String token) {
         Optional<VerificationToken> verificationTokenOptional = verificationTokenRepository.findByToken(token);
-        VerificationToken verificationToken = verificationTokenOptional.orElseThrow(() -> {
-            return new SpringSimpleBlogException("Cannot verify account");
-        });
+        VerificationToken verificationToken = verificationTokenOptional.orElseThrow(() -> new SpringSimpleBlogException("Cannot verify account"));
 
         User user = verificationToken.getUser();
         user.setEnable(true);
@@ -104,8 +104,7 @@ public class AuthService {
         org.springframework.security.core.userdetails.User secUser = (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
         String username = secUser.getUsername();
         Optional<User> userOp = userRepositry.findByUsername(username);
-        User user = userOp.orElseThrow(() -> new UserNotFoundException("User not found username:" + username));
-        return user;
+        return userOp.orElseThrow(() -> new UserNotFoundException("User not found username:" + username));
     }
 
     public AuthenticationResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {

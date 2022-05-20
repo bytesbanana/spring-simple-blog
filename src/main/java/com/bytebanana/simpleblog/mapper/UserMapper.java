@@ -1,6 +1,5 @@
 package com.bytebanana.simpleblog.mapper;
 
-import com.bytebanana.simpleblog.dto.PostResponse;
 import com.bytebanana.simpleblog.dto.UserProfileRequest;
 import com.bytebanana.simpleblog.dto.UserProfileResponse;
 import com.bytebanana.simpleblog.service.AuthService;
@@ -9,9 +8,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.bytebanana.simpleblog.dto.RegisterRequest;
 import com.bytebanana.simpleblog.entity.User;
-import com.bytebanana.simpleblog.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
 

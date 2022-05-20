@@ -14,8 +14,6 @@ import java.util.Date;
 
 import javax.annotation.PostConstruct;
 
-import com.bytebanana.simpleblog.entity.RefreshToken;
-import com.bytebanana.simpleblog.exception.SpringSimpleBlogException;
 import com.bytebanana.simpleblog.repository.RefreshTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -83,19 +81,16 @@ public class JwtProvider {
     public String generateToken(Authentication authentication) {
         User principal = (User) authentication.getPrincipal();
 
-        String token = Jwts.builder().setSubject(principal.getUsername()).setIssuedAt(Date.from(Instant.now()))
+        return Jwts.builder().setSubject(principal.getUsername()).setIssuedAt(Date.from(Instant.now()))
                 .setExpiration(Date.from(Instant.now().plusMillis(expirationInMilli))).signWith(getPrivateKey())
                 .compact();
-
-        return token;
     }
 
     public String generateTokenByUsername(String username) {
-        String token = Jwts.builder().setSubject(username).setIssuedAt(Date.from(Instant.now()))
+
+        return Jwts.builder().setSubject(username).setIssuedAt(Date.from(Instant.now()))
                 .setExpiration(Date.from(Instant.now().plusMillis(expirationInMilli))).signWith(getPrivateKey())
                 .compact();
-
-        return token;
     }
 
     public boolean validateToken(String jwt) {
@@ -111,8 +106,7 @@ public class JwtProvider {
     }
 
     private JwtParser buildJwsParse() {
-        JwtParser jwtParser = Jwts.parserBuilder().setSigningKey(getPublicKey()).build();
-        return jwtParser;
+        return Jwts.parserBuilder().setSigningKey(getPublicKey()).build();
     }
 
     public String getUsernameFromJwt(String jwt) {
@@ -125,10 +119,6 @@ public class JwtProvider {
         JwtParser jwtParser = buildJwsParse();
         Claims claims = jwtParser.parseClaimsJws(jwt).getBody();
         return claims.getExpiration();
-    }
-
-    public Long getExpirationInMilli(){
-        return this.expirationInMilli;
     }
 
 }

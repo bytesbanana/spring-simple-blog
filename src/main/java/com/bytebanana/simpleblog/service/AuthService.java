@@ -8,6 +8,8 @@ import com.bytebanana.simpleblog.dto.RefreshTokenRequest;
 import com.bytebanana.simpleblog.entity.RefreshToken;
 import com.bytebanana.simpleblog.exception.UserNotFoundException;
 import com.bytebanana.simpleblog.repository.UserRepositry;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,8 +32,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Transactional
+@ToString
 public class AuthService {
 
     @Value("${server.port}")
